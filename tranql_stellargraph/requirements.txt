@@ -1,0 +1,4 @@
+stellargraph==1.2.1
+networkx
+tranql-jupyter
+numpy
