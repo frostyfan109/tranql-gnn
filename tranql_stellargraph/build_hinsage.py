@@ -14,7 +14,7 @@ from tranql_jupyter import KnowledgeGraph
 import matplotlib.pyplot as plt
 import pandas as pd
 import multiprocessing
-from tranql_stellargraph.dataset import k_graph, dataset
+from dataset import k_graph, dataset
 
 MODEL_NAME = "tranql-hinsage-model"
 

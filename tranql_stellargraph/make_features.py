@@ -76,7 +76,3 @@ def format3(k_graph):
             node[n_type] = True
 
     return nodes
-
-
-def format(k_graph):
-    return format3(k_graph)

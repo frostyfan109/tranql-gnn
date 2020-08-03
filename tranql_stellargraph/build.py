@@ -11,10 +11,11 @@ from tensorflow.keras.losses import binary_crossentropy
 from sklearn import preprocessing, feature_extraction, model_selection
 import matplotlib.pyplot as plt
 from tranql_jupyter import KnowledgeGraph
-from tranql_stellargraph.dataset import make_dataset
+from dataset import make_dataset
+from make_features import format2
 
 k_graph = KnowledgeGraph.mock("mock1.json")
-dataset = make_dataset(k_graph)
+dataset = make_dataset(k_graph, format2)
 
 MODEL_NAME = "tranql-graphsage-model"
 

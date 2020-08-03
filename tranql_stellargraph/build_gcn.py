@@ -14,14 +14,14 @@ from tensorflow.keras.callbacks import EarlyStopping
 from sklearn import model_selection
 import matplotlib.pyplot as plt
 import pandas as pd
-from tranql_jupyter import KnowledgeGraph
-from tranql_stellargraph.dataset import make_dataset
-
-k_graph = KnowledgeGraph.mock("mock1.json")
-G = make_dataset(k_graph)
+from dataset import make_dataset
+from make_features import format3
 
 
-def make_model():
+def get_dataset(kg):
+    return make_dataset(kg, format3)
+
+def make_model(G):
     edge_splitter_test = EdgeSplitter(G)
     G_test, edge_ids_test, edge_labels_test = edge_splitter_test.train_test_split(
         p=0.2, method="global"
@@ -48,12 +48,13 @@ def make_model():
     x_inp, x_out = gcn.in_out_tensors()
 
     prediction = LinkEmbedding(activation="relu", method="ip")(x_out)
+    prediction = Reshape((-1, ))(prediction)
 
     model = Model(inputs=x_inp, outputs=prediction)
     model.compile(
         optimizer=Adam(lr=0.01),
         loss=binary_crossentropy,
-        metrics=["acc"]
+        metrics=["binary_accuracy"]
     )
     init_train_metrics = model.evaluate(train_flow)
     init_test_metrics = model.evaluate(test_flow)
@@ -77,24 +78,36 @@ def make_model():
     train_metrics = model.evaluate(train_flow)
     test_metrics = model.evaluate(test_flow)
 
-    print("\nTrain Set Metrics of the trained model:")
-    for name, val in zip(model.metrics_names, train_metrics):
-        print("\t{}: {:0.4f}".format(name, val))
-
-    print("\nTest Set Metrics of the trained model:")
-    for name, val in zip(model.metrics_names, test_metrics):
-        print("\t{}: {:0.4f}".format(name, val))
+    # print("\nTrain Set Metrics of the trained model:")
+    # for name, val in zip(model.metrics_names, train_metrics):
+    #     print("\t{}: {:0.4f}".format(name, val))
+    #
+    # print("\nTest Set Metrics of the trained model:")
+    # for name, val in zip(model.metrics_names, test_metrics):
+    #     print("\t{}: {:0.4f}".format(name, val))
 
     sg.utils.plot_history(history)
     plt.show()
 
     return model
 
-if __name__ == "__main__" and False:
-    from random import randrange
-    model = make_model()
 
-    net = G.to_networkx()
+def main2():
+    from tranql_jupyter import KnowledgeGraph
+    k_graph = KnowledgeGraph.mock("mock1.json")
+    dataset = get_dataset(k_graph)
+    model = make_model(dataset)
+
+
+def main():
+    from random import randrange
+    from tranql_jupyter import KnowledgeGraph
+
+    k_graph = KnowledgeGraph.mock("mock1.json")
+    dataset = get_dataset(k_graph)
+    model = make_model(dataset)
+
+    net = dataset.to_networkx()
     nodes = list(net.nodes)
     edges = list(net.edges)
 
@@ -114,7 +127,7 @@ if __name__ == "__main__" and False:
         net.has_edge(n0, n1) for (n0, n1) in edge_ids
     ])
 
-    gen = FullBatchLinkGenerator(G, method="gcn")
+    gen = FullBatchLinkGenerator(dataset, method="gcn")
     flow = gen.flow(edge_ids, edge_labels)
 
     predictions = model.predict(flow)
@@ -123,3 +136,8 @@ if __name__ == "__main__" and False:
         n0, n1 = edge_ids[i]
         real = net.has_edge(n0, n1)
         print(f"{n0}->{n1}. Prediction: {prediction}. Real: {real}.")
+
+
+if __name__ == "__main__":
+    # main()
+    main2()

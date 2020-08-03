@@ -14,11 +14,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from sklearn import model_selection
 import matplotlib.pyplot as plt
 import pandas as pd
-from tranql_jupyter import KnowledgeGraph
-from tranql_stellargraph.dataset import make_dataset
-
-k_graph = KnowledgeGraph.mock("mock1.json")
-dataset = make_dataset(k_graph)
+from dataset import make_dataset
 
 """ ComplEx does not use node features """
 
@@ -26,21 +22,6 @@ MODEL_NAME = "tranql-complex-model"
 
 train_size = 0.8
 test_size = 0.2
-
-edge_df = pd.DataFrame([
-    {
-        "source": e["source_id"],
-        "target": e["target_id"],
-        "label": e["label"]
-    } for e in k_graph.build_knowledge_graph()["edges"]
-])
-
-edge_train, edge_test = model_selection.train_test_split(
-    edge_df, train_size=train_size, test_size=test_size
-)
-edge_train, edge_val = model_selection.train_test_split(
-    edge_train, test_size=test_size
-)
 
 # dataset, edge_train, edge_test, edge_val = sg.datasets.WN18().load()
 
@@ -50,10 +31,29 @@ NEGATIVE_SAMPLES = 10
 LEARNING_RATE = 1E-3
 PATIENCE = 10
 
-def make_model():
+
+def get_dataset(kg):
+    return make_dataset(kg)
+
+
+def make_model(dataset):
+    edge_df = pd.DataFrame([
+        {
+            "source": e[0],
+            "target": e[1],
+            "label": e[2]["label"]
+        } for e in dataset.to_networkx().edges(data=True)
+    ])
+
+    edge_train, edge_test = model_selection.train_test_split(
+        edge_df, train_size=train_size, test_size=test_size
+    )
+    edge_train, edge_val = model_selection.train_test_split(
+        edge_train, test_size=test_size
+    )
 
     wn18_gen = KGTripleGenerator(
-        dataset, batch_size=len(edge_train) // 100
+        dataset, batch_size=max(len(edge_train) // 100, 1) # make sure not to give batch size of 0
     )
     wn18_complex = ComplEx(
         wn18_gen,
@@ -112,7 +112,7 @@ def make_type_mappings(k_graph):
             mappings[type].append(node[0])
     return mappings
 
-def predict_edge(model, edges):
+def predict_edge(model, dataset, k_graph, edges):
     df = pd.DataFrame([
         {
             "source": e[0],
@@ -137,9 +137,21 @@ def predict_edge(model, edges):
             src, dst, pred = edges[i]
             print(f"Edge {src}-[{pred}]->{dst} predicted ({prediction}) (real={k_graph.net.has_edge(src, dst, pred)})")
 
-if __name__ == "__main__" and False:
+
+def main2():
+    from tranql_jupyter import KnowledgeGraph
+    k_graph = KnowledgeGraph.mock("mock1.json")
+    dataset = get_dataset(k_graph)
+    model = make_model(dataset)
+
+
+def main():
     from random import randrange, choice
-    model = make_model()
+    from tranql_jupyter import KnowledgeGraph
+
+    k_graph = KnowledgeGraph.mock("mock1.json")
+    dataset = get_dataset(k_graph)
+    model = make_model(dataset)
 
     num_edges = 2
     num_real_edges = 0
@@ -156,7 +168,6 @@ if __name__ == "__main__" and False:
     type_predicate_mappings = make_type_predicate_mappings(k_graph)
     type_mappings = make_type_mappings(k_graph)
 
-
     for i in range(num_edges):
         t0 = choice(list(type_predicate_mappings.keys()))
         t1 = choice(list(type_predicate_mappings[t0].keys()))
@@ -166,4 +177,9 @@ if __name__ == "__main__" and False:
         edges = [
             (n0, n1, predicate) for predicate in type_predicate_mappings[t0][t1]
         ]
-        predict_edge(model, edges)
+        predict_edge(model, dataset, k_graph, edges)
+
+
+if __name__ == "__main__":
+    # main()
+    main2()
