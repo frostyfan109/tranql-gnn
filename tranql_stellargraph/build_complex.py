@@ -52,39 +52,39 @@ def make_model(dataset):
         edge_train, test_size=test_size
     )
 
-    wn18_gen = KGTripleGenerator(
+    gen = KGTripleGenerator(
         dataset, batch_size=max(len(edge_train) // 100, 1) # make sure not to give batch size of 0
     )
-    wn18_complex = ComplEx(
-        wn18_gen,
+    complex = ComplEx(
+        gen,
         embedding_dimension=EMBEDDING_DIMENSION,
         embeddings_regularizer=l2(1E-7)
     )
-    wn18_inp, wn18_out = wn18_complex.in_out_tensors()
+    inp, out = complex.in_out_tensors()
 
-    wn18_model = Model(inputs=wn18_inp, outputs=wn18_out)
-    wn18_model.compile(
+    model = Model(inputs=inp, outputs=out)
+    model.compile(
         optimizer=Adam(lr=LEARNING_RATE),
         loss=BinaryCrossentropy(from_logits=True),
         metrics=[BinaryAccuracy(threshold=0.0)]
     )
 
-    wn18_train_gen = wn18_gen.flow(
+    train_gen = gen.flow(
         edge_train, negative_samples=NEGATIVE_SAMPLES, shuffle=True
     )
-    wn18_valid_gen = wn18_gen.flow(
+    valid_gen = gen.flow(
         edge_val, negative_samples=NEGATIVE_SAMPLES
     )
 
-    wn18_es = EarlyStopping(monitor="val_loss", patience=PATIENCE)
-    wn18_history = wn18_model.fit(
-        wn18_train_gen, validation_data=wn18_valid_gen, epochs=EPOCHS, callbacks=[wn18_es]
+    es = EarlyStopping(monitor="val_loss", patience=PATIENCE)
+    history = model.fit(
+        train_gen, validation_data=valid_gen, epochs=EPOCHS, callbacks=[es]
     )
 
-    sg.utils.plot_history(wn18_history)
+    sg.utils.plot_history(history)
     plt.show()
 
-    return wn18_model
+    return model
 
 
 def make_type_predicate_mappings(k_graph):
@@ -112,7 +112,7 @@ def make_type_mappings(k_graph):
             mappings[type].append(node[0])
     return mappings
 
-def predict_edge(model, dataset, k_graph, edges):
+def predict_edge(model, dataset, k_graph, edges, show_all=False):
     df = pd.DataFrame([
         {
             "source": e[0],
@@ -129,6 +129,9 @@ def predict_edge(model, dataset, k_graph, edges):
     predictions = [prediction[0] for prediction in predictions]
     threshold = 0.0  # greater than 0.5 to be considered strongly predicted
     positive_predictions = [p for p in predictions if p > threshold]
+    if show_all:
+        positive_predictions = predictions
+
     if len(positive_predictions) == 0:
         src, dst = edges[0][0], edges[0][1]
         print(f"No edge predicted between {src} and {dst} (real={k_graph.net.has_edge(src, dst)}).")
@@ -140,7 +143,7 @@ def predict_edge(model, dataset, k_graph, edges):
 
 def main2():
     from tranql_jupyter import KnowledgeGraph
-    k_graph = KnowledgeGraph.mock("mock1.json")
+    k_graph = KnowledgeGraph.mock("mock3.json")
     dataset = get_dataset(k_graph)
     model = make_model(dataset)
 

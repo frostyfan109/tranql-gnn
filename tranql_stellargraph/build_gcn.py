@@ -15,11 +15,11 @@ from sklearn import model_selection
 import matplotlib.pyplot as plt
 import pandas as pd
 from dataset import make_dataset
-from make_features import format3
+from make_features import format3, format2, neighborhood_format
 
 
 def get_dataset(kg):
-    return make_dataset(kg, format3)
+    return make_dataset(kg, neighborhood_format)
 
 def make_model(G):
     edge_splitter_test = EdgeSplitter(G)
@@ -100,7 +100,7 @@ def main2():
 
 
 def main():
-    from random import randrange
+    import sys
     from tranql_jupyter import KnowledgeGraph
 
     k_graph = KnowledgeGraph.mock("mock1.json")
@@ -111,17 +111,22 @@ def main():
     nodes = list(net.nodes)
     edges = list(net.edges)
 
-    edge_ids = [
-        [nodes.pop(randrange(len(nodes))) for i in range(2)] for n in range(5)
-    ]
-    edge_ids += [
-        edges.pop(randrange(len(edges)))[:2] for n in range(5)
-    ]
+    # edge_ids = [
+    #     [nodes.pop(randrange(len(nodes))) for i in range(2)] for n in range(5)
+    # ]
+    # edge_ids += [
+    #     edges.pop(randrange(len(edges)))[:2] for n in range(5)
+    # ]
     # Within mock1.json, the only edge from CHEMBL:520007 is to the gene HGNC:9591 (Prostaglandin D2 Receptor/PTGDR)
     # The model should strongly predict an edge from CHEMBL:520007 to HGNC:9594    (Prostaglandin E Receptor 2/PTGER2)
     # This is interesting because PTGER2 is an important paralog of PTGDR
     # See: section "GeneCards Summary for PTGDR Gene" from https://www.genecards.org/cgi-bin/carddisp.pl?gene=PTGDR
-    edge_ids.append(["HGNC:10610", "MONDO:0010940"])
+    # edge_ids.append(["HGNC:10610", "MONDO:0010940"])
+
+    if len(sys.argv) == 1:
+        return
+    edge_ids = [arg.split("-") for arg in sys.argv[1:]]
+
     edge_ids = np.array(edge_ids)
     edge_labels = np.array([
         net.has_edge(n0, n1) for (n0, n1) in edge_ids
@@ -132,12 +137,11 @@ def main():
 
     predictions = model.predict(flow)
     for i, prediction in enumerate(predictions[0]):
-        prediction = prediction[0]
         n0, n1 = edge_ids[i]
         real = net.has_edge(n0, n1)
         print(f"{n0}->{n1}. Prediction: {prediction}. Real: {real}.")
 
 
 if __name__ == "__main__":
-    # main()
-    main2()
+    main()
+    # main2()

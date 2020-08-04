@@ -48,6 +48,7 @@ def format1(k_graph):
 
 
 def format2(k_graph):
+    """ Try to incorporate a good portion of the node's attributes as its feature vector """
     nodes = get_nodes(k_graph)
     for node in nodes:
         ontology = node["id"].split(":")[0]
@@ -67,6 +68,7 @@ def format2(k_graph):
 
 
 def format3(k_graph):
+    """ Just use the node's types as its feature vector """
     nodes = get_nodes(k_graph)
     for node in nodes:
         type = node["type"]
@@ -74,5 +76,39 @@ def format3(k_graph):
             del node[i]
         for n_type in type:
             node[n_type] = True
+
+    return nodes
+
+def neighborhood_format(k_graph):
+    """ Encode information about a node's neighborhood as its feature vector """
+    nodes = get_nodes(k_graph)
+    for i, node in enumerate(nodes):
+        id = node["id"]
+        attributes = {
+            "connected_nodes": {},
+            # "type_count": {},
+            "node_type": node["type"], # keep track of node's type,
+            "ontology": id.split(":")[0], # keep track of the node's ontology
+        }
+        connected_to = k_graph.net[id]
+        for connected_node_id in connected_to:
+            edges = connected_to[connected_node_id]
+            attributes["connected_nodes"][connected_node_id] = len(edges)
+
+            # for type in k_graph.net.nodes[connected_node_id]["attr_dict"]["type"]:
+            #     if type not in attributes["type_count"]: attributes["type_count"][type] = 0
+            #     attributes["type_count"][type] += 1
+
+        for attr in list(attributes.keys()):
+            if isinstance(attributes[attr], dict):
+                for key in attributes[attr]:
+                    attributes[attr + "=" + key] = attributes[attr][key]
+                del attributes[attr]
+            elif isinstance(attributes[attr], list):
+                for x in attributes[attr]:
+                    attributes[attr + "=" + x] = True
+                del attributes[attr]
+
+        nodes[i] = attributes
 
     return nodes
