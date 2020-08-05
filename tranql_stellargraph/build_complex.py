@@ -183,6 +183,22 @@ def main():
         predict_edge(model, dataset, k_graph, edges)
 
 
+def main3():
+    import sys
+    from tranql_jupyter import KnowledgeGraph
+    k_graph = KnowledgeGraph.mock("mock1.json")
+    dataset = get_dataset(k_graph)
+    model = make_model(dataset)
+
+    if len(sys.argv) == 1:
+        return
+    edges = [arg.split("-") for arg in sys.argv[1:]]
+    edges = [(src, dst, pred) for (src, pred, dst) in edges]
+    for edge in edges:
+        predict_edge(model, dataset, k_graph, [edge], show_all=True)
+
+
 if __name__ == "__main__":
     # main()
-    main2()
+    # main2()
+    main3()
