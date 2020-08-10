@@ -20,18 +20,43 @@ from dataset import make_dataset
 
 MODEL_NAME = "tranql-complex-model"
 
+""" Split the dataset graph into a training, test, and validation sets """
 train_size = 0.8
 test_size = 0.2
 
 # dataset, edge_train, edge_test, edge_val = sg.datasets.WN18().load()
 
-EPOCHS = 100
-EMBEDDING_DIMENSION = 200
+EPOCHS = 100 # The model will see the entire training set every epoch and update its weights
+EMBEDDING_DIMENSION = 200 # Complicated
+"""
+Negative samples is the amount of "corrupted" edges or "fake" edges that are created for every real edge that the model
+sees. In a knowledge graph, every edge is real, for obvious reasons, so for the model to learn effectively, it has to
+also be exposed to unreal edges, like any other neural network would. See this paper: https://arxiv.org/pdf/1708.06816.pdf
+"""
 NEGATIVE_SAMPLES = 10
-LEARNING_RATE = 1E-3
+LEARNING_RATE = 1E-3 # Simply the learning rate of the optimizer (Adam)
+"""
+This model uses a lot of epochs for training. It implements early stopping, which is activated when the validation
+accuracy stagnates/stops changing by much for {PATIENCE} epochs. Once it activates, the model stops training.
+"""
 PATIENCE = 10
 
 
+"""
+Each model in this directory implements the `get_dataset` and `make_model` methods
+
+get_dataset will typically call `make_dataset` from dataset.py and pass in a formatting function
+from `make_features.py`. This will convert the KnowledgeGraph into a StellarGraph instance with
+specific features that the model expects.
+
+make_model takes the StellarGraph instance `dataset` and constructs and trains a Keras model
+using it.
+"""
+
+""" get_dataset assists the user in formatting a TranQL-Jupyter KnowledgeGraph object into a StellarGraph
+instance with whatever node features/other things the model expects to be present. For ComplEx here,
+all it needs is the KnowledgeGraph to be turned into a StellarGraph instance.
+"""
 def get_dataset(kg):
     return make_dataset(kg)
 
@@ -88,8 +113,15 @@ def make_model(dataset):
 
 
 def make_type_predicate_mappings(k_graph):
-    """ Map valid edge predicates between node types """
-    """ E.g. mappings['chemical_substance']['gene'] = ['interacts_with', 'affects_activity_of', ...] """
+    """ Map valid edge predicates between node types. Usage: what predicates are there between genes and diseases?
+
+    :param k_graph: A KnowledgeGraph instance
+    :type k_graph: :class:`KnowledgeGraph`
+
+    :return: A dict of node_type->node_type->list<edge_predicate>, indicating valid predicates between two node types
+        For example, mappings['chemical_substance']['gene'] = ['interacts_with', 'affects_activity_of', ...]
+    :rtype: dict
+    """
     mappings = {}
     for edge in k_graph.net.edges(keys=True):
         n0, n1, predicate = edge
