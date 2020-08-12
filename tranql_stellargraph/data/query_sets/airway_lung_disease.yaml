@@ -1,0 +1,28 @@
+---
+info:
+  name: Airway lung diseases
+  description: A collection of queries from Robokop relating to lung diseases which affect the airways.
+queries:
+# * Robokop seems to be broken for the asthma query right now, so just temporary remove it *
+#  - |
+#    set asthma='MONDO:0004979'
+#    select chemical_substance->gene->disease
+#      from '/graph/gamma/quick'
+#     where disease=$asthma
+  - |
+    set COPD='MONDO:0005002' -- chronic obstructive pulmonary disease
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$COPD
+
+  - |
+    set chronic_bronchitis='MONDO:0005607'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$chronic_bronchitis
+
+  - |
+    set cystic_fibrosis='MONDO:0009061'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$cystic_fibrosis

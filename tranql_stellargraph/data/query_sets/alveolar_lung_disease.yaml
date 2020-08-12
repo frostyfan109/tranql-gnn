@@ -1,0 +1,27 @@
+---
+info:
+  name: Alveolar lung diseases
+  description: A collection of queries from Robokop relating to lung diseases which affect the alveoli (air sacs).
+queries:
+  - |
+    set pneumonia='MONDO:0005249'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$pneumonia
+  - |
+    set tuberculosis='MONDO:0018076'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$tuberculosis
+
+  - |
+    set pulmonary_edema='MONDO:0006932'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$pulmonary_edema
+
+  - |
+    set lung_cancer='MONDO:0008903'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$lung_cancer

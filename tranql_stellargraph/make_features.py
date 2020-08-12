@@ -80,20 +80,24 @@ def format3(k_graph):
 
     return nodes
 
+USE_CONNECTED_NODES = True
+USE_TYPE_COUNT = False
+USE_NODE_TYPE = True
+USE_ONTOLOGY = True
+
+USE_ONTO_PARENTS = True
+USE_ONTO_SIBLINGS = False
+USE_ONTO_CHILDREN = False
+USE_ONTO_ANCESTORS = False
+
+NEVER = 0
+FAILED_ONTO = 1
+ALWAYS = 2
+USE_NODE_ATTRIBUTES = FAILED_ONTO
+
+""" This whole thing is a mess and deserves a cleanup """
 def neighborhood_format(k_graph):
     """ Encode information about a node's neighborhood as its feature vector """
-    USE_CONNECTED_NODES = True
-    USE_TYPE_COUNT = False
-    USE_NODE_TYPE = True
-    USE_ONTOLOGY = True
-
-    USE_ONTO_PARENTS = True
-    USE_ONTO_SIBLINGS = False
-    USE_ONTO_CHILDREN = False
-    USE_ONTO_ANCESTORS = False
-
-    USE_NODE_ATTRIBUTES = True
-
     nodes = get_nodes(k_graph)
     for i, node in enumerate(nodes):
         id = node["id"]
@@ -112,24 +116,29 @@ def neighborhood_format(k_graph):
                 if type not in attributes["type_count"]: attributes["type_count"][type] = 0
                 attributes["type_count"][type] += 1
 
+        onto_did_fail = False
         if USE_ONTO_PARENTS:
             res = requests.get(f"https://onto.renci.org/parents/{id}", headers={"accept": "application/json"})
             if res.ok:
                 attributes["onto_parents"] = res.json().get("parents", [])
+            if len(attributes.get("onto_parents", [])) == 0: onto_did_fail = True
         if USE_ONTO_SIBLINGS:
             res = requests.get(f"https://onto.renci.org/siblings/{id}", headers={"accept": "application/json"})
             if res.ok:
                 attributes["onto_siblings"] = res.json().get("siblings", [])
+            if len(attributes.get("onto_siblings", [])) == 0: onto_did_fail = True
         if USE_ONTO_CHILDREN:
             res = requests.get(f"https://onto.renci.org/children/{id}", headers={"accept": "application/json"})
             if res.ok:
                 attributes["onto_children"] = res.json()
+            if len(attributes.get("onto_children", [])) == 0: onto_did_fail = True
         if USE_ONTO_ANCESTORS:
             res = requests.get(f"https://onto.renci.org/ancestors/{id}", headers={"accept": "application/json"})
             if res.ok:
                 attributes["onto_ancestors"] = res.json()
+            if len(attributes.get("onto_ancestors", [])) == 0: onto_did_fail = True
 
-        if USE_NODE_ATTRIBUTES and "gene" in node["type"]:
+        if USE_NODE_ATTRIBUTES == ALWAYS or (USE_NODE_ATTRIBUTES == FAILED_ONTO and onto_did_fail):
             attributes["node_attr"] = {}
             for attr in node:
                 val = node[attr]
