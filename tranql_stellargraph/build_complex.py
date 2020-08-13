@@ -58,7 +58,9 @@ instance with whatever node features/other things the model expects to be presen
 all it needs is the KnowledgeGraph to be turned into a StellarGraph instance.
 """
 def get_dataset(kg):
-    return make_dataset(kg)
+    dataset = make_dataset(kg)
+    print(f"Creating StellarGraph dataset from {len(kg.net.nodes)} node and {len(kg.net.edges)} edge knowledge graph")
+    return dataset
 
 
 def make_model(dataset):

@@ -19,7 +19,9 @@ from make_features import format3, format2, neighborhood_format
 
 
 def get_dataset(kg):
-    return make_dataset(kg, neighborhood_format)
+    dataset = make_dataset(kg, neighborhood_format)
+    print(f"Creating StellarGraph dataset from {len(kg.net.nodes)} node and {len(kg.net.edges)} edge knowledge graph")
+    return dataset
 
 def make_model(G):
     edge_splitter_test = EdgeSplitter(G)
