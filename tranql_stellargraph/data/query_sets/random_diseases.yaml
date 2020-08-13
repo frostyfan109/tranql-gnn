@@ -1,0 +1,73 @@
+---
+info:
+  name: Broad query set of unrelated diseases
+  description: >-
+    A collection of queries from Robokop that may or may not be related to each other. The goal with this query set
+    is to test the performance of a large amount of largely unrelated data against the performance of a small amount
+    of related data.
+queries:
+  - |
+    set chronic_bronchitis='MONDO:0005607'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$chronic_bronchitis
+
+  - |
+    set common_cold='MONDO:0005709'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$common_cold
+
+  - |
+    set influenza='MONDO:0005812'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$influenza
+
+  - |
+    set gout='MONDO:0005393'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$gout
+
+  - |
+    set lupus='MONDO:0004670' --SLE
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$lupus
+
+  - |
+    set mumps='MONDO:0000989'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$mumps
+
+  - |
+    set meniere_disease='MONDO:0007972'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$meniere_disease
+
+  - |
+    set pleurisy='MONDO:0000986'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$pleurisy
+
+  - |
+    set pneumonia='MONDO:0005249'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$pneumonia
+
+  - |
+    set hypothyroidism='MONDO:0005420'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$hypothyroidism
+
+  - |
+    set yellow_fever='MONDO:0020502'
+    select chemical_substance->gene->disease
+      from '/graph/gamma/quick'
+     where disease=$yellow_fever

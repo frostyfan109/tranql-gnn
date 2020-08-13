@@ -1,5 +1,7 @@
-def create_model(response_set, get_dataset, make_model):
-    knowledge_graphs = [KnowledgeGraph(response["response"]["knowledge_graph"]) for response in response_set]
+def create_model(response_sets, get_dataset, make_model):
+    knowledge_graphs = []
+    for response_set in response_sets:
+        knowledge_graphs += [KnowledgeGraph(response["response"]["knowledge_graph"]) for response in response_set]
 
     union_graph = reduce(lambda a, b: a+b, knowledge_graphs)
 
@@ -20,7 +22,13 @@ if __name__ == "__main__":
         description="Takes a response set of queries and runs a model using all of the responses",
         formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("-s", "--source", help="Response set file (relative to data/response_sets)", required=True)
+    parser.add_argument(
+        "-s",
+        "--source",
+        help="Response set file (relative to data/response_sets). May also pass in multiple response sets at once",
+        nargs="+",
+        required=True
+    )
     parser.add_argument(
         "-m",
         "--model",
@@ -33,17 +41,19 @@ A model should implement the following top-level functions:
 
     args = parser.parse_args()
 
-    response_set_name = args.source
+    response_set_names = args.source
     model_file = args.model
     output = args.output
 
-    with open(os.path.join("data", "response_sets", response_set_name), "r") as file:
-        response_set = yaml.safe_load(file)
+    response_sets = []
+    for response_set_name in response_set_names:
+        with open(os.path.join("data", "response_sets", response_set_name), "r") as file:
+            response_sets.append(yaml.safe_load(file))
 
     loader = SourceFileLoader(model_file, model_file)
     model_module = loader.load_module()
 
-    model = create_model(response_set, model_module.get_dataset, model_module.make_model)
+    model = create_model(response_sets, model_module.get_dataset, model_module.make_model)
 
     if output is not None:
         model.save(output)

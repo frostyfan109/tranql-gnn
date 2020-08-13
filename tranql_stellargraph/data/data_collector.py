@@ -43,21 +43,39 @@ class QuerySet:
 if __name__ == "__main__":
     import os
     import yaml
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Creates response sets for every query set in "query_sets"')
+    parser.add_argument(
+        "-r",
+        "--remake",
+        help="Runs every query set regardless of if its response set has already been created",
+        action="store_true"
+    )
+
+    args = parser.parse_args()
+    remake = args.remake
 
     query_set_path = os.path.join("data", "query_sets")
     response_set_path = os.path.join("data", "response_sets")
+    def check_response_set_exists(name):
+        return os.path.isfile(os.path.join(response_set_path, name))
     for file_name in os.listdir(query_set_path):
-        with open(os.path.join(query_set_path, file_name), "r") as file:
-            query_set = QuerySet(yaml.safe_load(file))
-            print(f"""Processing query set "{query_set.name}"
+        response_set_exists = check_response_set_exists(file_name)
+        # If remake option is passed in, remake the response set regardless of if it exists or not
+        # Otherwise, only generate the response set if it hasn't already been made
+        if remake or not response_set_exists:
+            with open(os.path.join(query_set_path, file_name), "r") as file:
+                query_set = QuerySet(yaml.safe_load(file))
+                print(f"""Processing query set "{query_set.name}"
 Description: {query_set.description}""")
 
-            queries = query_set.queries
-            results = make_queries(queries)
-            # print("Completed queries on query set.", "\n")
-            with open(os.path.join(response_set_path, file_name), "w+") as output_file:
-                yaml.safe_dump(
-                    results,
-                    output_file,
-                    default_flow_style=False
-                )
+                queries = query_set.queries
+                results = make_queries(queries)
+                # print("Completed queries on query set.", "\n")
+                with open(os.path.join(response_set_path, file_name), "w+") as output_file:
+                    yaml.safe_dump(
+                        results,
+                        output_file,
+                        default_flow_style=False
+                    )
