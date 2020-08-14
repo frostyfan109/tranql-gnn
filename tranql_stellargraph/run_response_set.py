@@ -1,3 +1,6 @@
+from functools import reduce
+from tranql_jupyter import KnowledgeGraph
+
 def create_model(response_sets, get_dataset, make_model):
     knowledge_graphs = []
     for response_set in response_sets:
@@ -15,8 +18,6 @@ if __name__ == "__main__":
     import yaml
     import os
     from importlib.machinery import SourceFileLoader
-    from functools import reduce
-    from tranql_jupyter import KnowledgeGraph
 
     parser = argparse.ArgumentParser(
         description="Takes a response set of queries and runs a model using all of the responses",
