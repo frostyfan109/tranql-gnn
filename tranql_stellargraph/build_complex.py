@@ -114,6 +114,37 @@ def make_model(dataset):
     return model
 
 
+def make_prediction(model, dataset, edge):
+    """ Makes a prediction on the model given an edge of (source_id, predicate, target_id). Included for documentation.
+
+    :param model: A Keras model created by `make_model`
+    :type model: tensorflow.keras.Model
+    :param dataset: The Stellargraph instance used to create `model`
+    :type dataset: stellargraph.Stellargraph
+    :param edge: A tuple of (source_id, predicate, target_id)
+    :type edge: tuple
+
+    :return: A prediction of the existence of the edge
+    :rtype: float
+    """
+    edge_df = pd.DataFrame([
+        {
+            "source": edge[0],
+            "label": edge[1],
+            "target": edge[2]
+        }
+    ])
+    gen = KGTripleGenerator(
+        dataset,
+        batch_size=1
+    )
+    flow = gen.flow(edge_df)
+    predictions = model.predict(flow)
+
+    prediction = predictions[0][0]
+    return prediction
+
+
 def make_type_predicate_mappings(k_graph):
     """ Map valid edge predicates between node types. Usage: what predicates are there between genes and diseases?
 

@@ -94,6 +94,31 @@ def make_model(G):
     return model
 
 
+def make_prediction(model, dataset, edge):
+    """ Makes a prediction on the model given an edge of (source_id, target_id).
+    Mainly included for transparency purposes/documentation
+
+    :param model: A Keras model created by `make_model`
+    :type model: tensorflow.keras.Model
+    :param dataset: The StellarGraph instance used to create `model`
+    :type dataset: stellargraph.StellarGraph
+    :param edge: A tuple of (source_id, target_id)
+    :type edge: tuple
+
+    :return: A prediction of the existence of the edge
+    :rtype: float
+    """
+    gen = FullBatchLinkGenerator(
+        dataset,
+        method="gcn"
+    )
+    flow = gen.flow([edge])
+    predictions = model.predict(flow)
+
+    prediction = predictions[0][0]
+    return prediction
+
+
 def main2():
     from tranql_jupyter import KnowledgeGraph
     k_graph = KnowledgeGraph.mock("mock1.json")

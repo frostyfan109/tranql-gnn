@@ -1,12 +1,12 @@
 import requests
 from tqdm import tqdm
 
-def make_queries(queries, verbose=False):
+def make_queries(queries, api_url, verbose=False):
     results = []
     for i, query in enumerate(queries, 1):
         print(f"Making TranQL query {i}")
         res = requests.post(
-            "http://localhost:8001/tranql/query?asynchronous=true",
+            f"{api_url}/tranql/query?asynchronous=true",
             headers={
                 "accept": "application/json",
                 "content-type": "text/plain"
@@ -52,9 +52,16 @@ if __name__ == "__main__":
         help="Runs every query set regardless of if its response set has already been created",
         action="store_true"
     )
+    parser.add_argument(
+        "-a",
+        "--api",
+        help="Specify the url for the TranQL API.",
+        default="http://localhost:8001"
+    )
 
     args = parser.parse_args()
     remake = args.remake
+    api_base = args.api
 
     query_set_path = os.path.join("data", "query_sets")
     response_set_path = os.path.join("data", "response_sets")
@@ -71,7 +78,7 @@ if __name__ == "__main__":
 Description: {query_set.description}""")
 
                 queries = query_set.queries
-                results = make_queries(queries)
+                results = make_queries(queries, api_base)
                 # print("Completed queries on query set.", "\n")
                 with open(os.path.join(response_set_path, file_name), "w+") as output_file:
                     yaml.safe_dump(
